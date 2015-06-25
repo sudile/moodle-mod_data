@@ -235,39 +235,26 @@ class data_field_picture extends data_field_base {
         switch ($names[2]) {
             case 'file':
                 $fs = get_file_storage();
-                $fs->delete_area_files($this->context->id, 'mod_data', 'content', $content->id);
+                file_save_draft_area_files($value, $this->context->id, 'mod_data', 'content', $content->id);
                 $usercontext = context_user::instance($USER->id);
-                $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $value);
-                if (count($files)<2) {
-                    // no file
-                } else {
-                    $count = 0;
-                    foreach ($files as $draftfile) {
-                        $file_record = array('contextid'=>$this->context->id, 'component'=>'mod_data', 'filearea'=>'content', 'itemid'=>$content->id, 'filepath'=>'/');
-                        if (!$draftfile->is_directory()) {
-                            $file_record['filename'] = $draftfile->get_filename();
+                $files = $fs->get_area_files($this->context->id, 'mod_data', 'content', $content->id, 'itemid, filepath, filename', false);
 
-                            $content->content = $draftfile->get_filename();
-
-                            $file = $fs->create_file_from_storedfile($file_record, $draftfile);
-
-                            // If the file is not a valid image, redirect back to the upload form.
-                            if ($file->get_imageinfo() === false) {
-                                $url = new moodle_url('/mod/data/edit.php', array('d' => $this->field->dataid));
-                                redirect($url, get_string('invalidfiletype', 'error', $file->get_filename()));
-                            }
-
-                            $DB->update_record('data_content', $content);
-                            $this->update_thumbnail($content, $file);
-
-                            if ($count > 0) {
-                                break;
-                            } else {
-                                $count++;
-                            }
-                        }
+                // we expect no or just one file (maxfiles = 1 option is set for the form_filemanager)
+                if (count($files) == 0) {
+                    $content->content = null;
+                } elseif (count($files) == 1) {
+                    $file = array_values($files)[0];
+                    if ($file->get_imageinfo() === false) {
+                        $url = new moodle_url('/mod/data/edit.php', array('d' => $this->field->dataid));
+                        redirect($url, get_string('invalidfiletype', 'error', $file->get_filename()));
                     }
+                    $content->content = $file->get_filename();
+                    $this->update_thumbnail($content, $file);
+                } else {
+                    // this should not happen
+                    throw new invalid_state_exception('more then one file found in area during update data record');
                 }
+                $DB->update_record('data_content', $content);
 
                 break;
 
