@@ -2133,14 +2133,14 @@ function data_user_can_manage_entry($record, $data, $context = null) {
         return true;
     }
 
-    // Check whether this activity is read-only at present
+    // Check whether this activity is read-only at present.
     $readonly = data_in_readonly_period($data);
 
     if (!$readonly) {
-        // get record object from db if just id given like in data_isowner
-        // done before calling data_isowner() to avoid querying db twice
+        // Get record object from db if just id given like in data_isowner.
+        // ...done before calling data_isowner() to avoid querying db twice.
         if (!is_object($record)) {
-            if (!$record = $DB->get_record('data_records', array('id'=>$record))) {
+            if (!$record = $DB->get_record('data_records', array('id' => $record))) {
                 return false;
             }
         }
