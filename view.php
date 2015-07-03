@@ -372,6 +372,7 @@
     groups_print_activity_menu($cm, $returnurl);
 
 /// Delete any requested records
+
     if ($delete && confirm_sesskey() && (data_user_can_manage_entry($delete, $data, $context))) {
         if ($confirm = optional_param('confirm',0,PARAM_INT)) {
             if (data_delete_record($delete, $data, $course->id, $cm->id)) {
