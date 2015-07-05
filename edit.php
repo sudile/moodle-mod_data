@@ -262,6 +262,9 @@ if ($datarecord = data_submitted() and confirm_sesskey()) {
             $event->add_record_snapshot('data', $data);
             $event->trigger();
 
+            // Send a notification for creating this record
+            data_notify_entry_created($recordid, $data, $course, $context, $cm);
+
             if (!empty($datarecord->saveandview)) {
                 $viewurl = new moodle_url('/mod/data/view.php', array(
                     'd' => $data->id,

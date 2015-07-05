@@ -3894,3 +3894,60 @@ function data_process_submission(stdClass $mod, $fields, stdClass $datarecord) {
 
     return $result;
 }
+
+function data_notify_entry_created($recordid, $data, $course, $context, $cm) {
+    global $USER;
+
+    if (!has_capability('mod/data:manageentries', $context)) {
+        $manageusers = get_enrolled_users($context, 'mod/data:manageentries',
+                                                null, 'u.*', null, null, null, true);
+
+        $info = new stdClass();
+        $infohtml = new stdClass();
+
+        $databasename = format_string($data->name, true, array('context'=>$context));
+        $info->database = $databasename;
+        $databaseurl = new moodle_url('/mod/data/view.php', array('id' => $cm->id));
+        $info->databaseurl = $databaseurl->out(false);
+        $infohtml->database = html_writer::link($databaseurl, $databasename);
+
+        $info->user = fullname($USER);
+        $userurl = new moodle_url('/user/profile.php', array('id' => $USER->id));
+        $info->userurl = $userurl->out(false);
+        $infohtml->user = html_writer::link($userurl, $info->user);
+
+        $info->course = $course->fullname;
+        $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
+        $info->courseurl = $courseurl->out(false);
+        $infohtml->course = html_writer::link($courseurl, $info->course);
+
+        $entryurl = new moodle_url('/mod/data/view.php', array('d' => $data->id, 'rid' => $recordid));
+        $info->entryurl = $entryurl->out(false);
+        $infohtml->entryurl = $entryurl->out(false);
+
+        $subject = get_string('newentrynotificationsmall', 'data', $info);
+
+        $messagebody = get_string('newentrynotification', 'data', $info);
+        $messagebodyhtml = get_string('newentrynotificationhtml', 'data', $info);
+        // $messagebodyhtml = get_string('newentrynotification', 'data', $infohtml);
+
+        foreach ($manageusers as $manageuser) {
+            $message = new stdClass();
+            // $message = new \core\message\message(); // Note: since moodle 2.9.
+            $message->component         = 'mod_data';
+            $message->name              = 'notification';
+            $message->userfrom          = $USER;
+            $message->userto            = $manageuser;
+            $message->subject           = $subject;
+            // $message->fullmessage       = $messagebody;
+            $message->fullmessage       = $messagebodyhtml;
+            // $message->fullmessageformat = FORMAT_PLAIN;
+            $message->fullmessageformat = FORMAT_HTML;
+            // $message->fullmessagehtml   = $messagebodyhtml;
+            $message->fullmessagehtml   = '';
+            $message->smallmessage      = $subject;
+            $message->notification      = 1;
+            message_send($message);
+        }
+    }
+}

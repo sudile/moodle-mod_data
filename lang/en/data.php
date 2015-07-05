@@ -95,6 +95,7 @@ $string['data:viewanyrating'] = 'View total ratings that anyone received';
 $string['data:viewentry'] = 'View entries';
 $string['data:viewrating'] = 'View the total rating you received';
 $string['data:writeentry'] = 'Write entries';
+$string['data:receivenotifications'] = 'Receive database activity notifications.';
 $string['date'] = 'Date';
 $string['dateentered'] = 'Date entered';
 $string['defaultfielddelimiter'] = '(default is the comma character)';
@@ -224,6 +225,7 @@ $string['maxentries_help'] = 'The maximum number of entries a student is allowed
 $string['maxsize'] = 'Maximum size';
 $string['menu'] = 'Menu';
 $string['menuchoose'] = 'Choose...';
+$string['messageprovider:notification'] = 'Database activity notifications';
 $string['missingdata'] = 'Data id or object must be provided to field class';
 $string['missingfield'] = 'Programmer error: You must specify field and/or data when defining field class.';
 $string['modulename'] = 'Database';
@@ -260,6 +262,9 @@ $string['nametext'] = 'Text field';
 $string['nametextarea'] = 'Textarea field';
 $string['nameurl'] = 'URL field';
 $string['newentry'] = 'New entry';
+$string['newentrynotification'] = 'New entry in database \'{$a->database}\' in course \'{$a->course}\' from {$a->user}: {$a->entryurl}';
+$string['newentrynotificationhtml'] = '<p>New entry in database <a href="{$a->databaseurl}">\'{$a->database}\'</a> in course <a href="{$a->courseurl}">\'{$a->course}\'</a> from <a href="{$a->userurl}">{$a->user}</a>: {$a->entryurl}</p>';
+$string['newentrynotificationsmall'] = 'New entry in database \'{$a->database}\'';
 $string['newfield'] = 'Create a new field';
 $string['newfield_help'] = 'A field allows the input of data. Each entry in a database activity can have multiple fields of multiple types such as a date field, which allows participants to select a day, month and year from a dropdown list, a picture field, which allows participants to upload an image file, or a checkbox field, which allows participants to select one or more options.
 
