@@ -228,4 +228,127 @@ class mod_data_external extends external_api {
         );
     }
 
+    /**
+     * Describes the parameters for get_database_fields.
+     *
+     * @return external_external_function_parameters
+     */
+    public static function get_database_fields_parameters() {
+        return new external_function_parameters (
+            array(
+                'databaseid' => new external_value(PARAM_INT, 'database id', VALUE_REQUIRED)
+            )
+        );
+    }
+
+    /**
+     * Returns the list of fields the requested databae has.
+     *
+     * @param  int $databaseid the database id
+     * @return array the field details
+     */
+    public static function get_database_fields($databaseid) {
+        global $DB;
+
+        if (! $cm = get_coursemodule_from_instance('data', $databaseid)) {
+            print_error('invalidid', 'data');
+        }
+        $context = context_module::instance($cm->id);
+        require_capability('mod/data:viewentry', $context);
+
+        // Retrieve the format for the fields.
+        $fields = $DB->get_records('data_fields', array('dataid' => $databaseid));
+
+        return $fields;
+    }
+
+    /**
+     * Describes the get_database_fields return value.
+     *
+     * @return external_multiple_structure
+     */
+    public static function get_database_fields_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'Field id'),
+                    'type' => new external_value(PARAM_TEXT, 'Type of field'),
+                    'name' => new external_value(PARAM_TEXT, 'Name of field'),
+                    'description' => new external_value(PARAM_TEXT, 'Description of field')
+                ), 'Field'
+            )
+        );
+    }
+
+    /**
+     * Describes the parameters for create_database_entry.
+     *
+     * @return external_external_function_parameters
+     */
+    public static function create_database_entry_parameters() {
+        return new external_function_parameters (
+            array(
+                'databaseid' => new external_value(PARAM_INT, 'database id', VALUE_REQUIRED),
+                'datarecord' => new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'fieldname' => new external_value(PARAM_TEXT, 'field name', VALUE_REQUIRED),
+                            'fieldcontent' => new external_value(PARAM_RAW, 'field content', VALUE_REQUIRED)
+                        ),
+                        'field', VALUE_REQUIRED
+                    ),
+                    'data entry', VALUE_REQUIRED
+                )
+            )
+        );
+    }
+
+    /**
+     * Creates a new database entry.
+     *
+     * @param  int $databaseid the database id
+     * @return array the field details
+     */
+    public static function create_database_entry($databaseid, $datarecord) {
+        global $DB, $CFG;
+
+        if (! $data = $DB->get_record('data', array('id' => $databaseid))) {
+            print_error('invalidid', 'data');
+        }
+        if (! $course = $DB->get_record('course', array('id'=>$data->course))) {
+            print_error('coursemisconf');
+        }
+        if (! $cm = get_coursemodule_from_instance('data', $databaseid)) {
+            print_error('invalidcoursemodule');
+        }
+
+        $context = context_module::instance($cm->id);
+
+        require_capability('mod/data:writeentry', $context);
+
+        $fields = $DB->get_records('data_fields', array('dataid' => $databaseid), '', 'name, id');
+
+        $datarecordobj = new stdClass();
+        foreach ($datarecord as $field) {
+            if (isset($fields[$field['fieldname']])) {
+                $fieldindex = 'field_'.$fields[$field['fieldname']]->id;
+                $datarecordobj->$fieldindex = $field['fieldcontent'];
+            }
+            // ToDo: ...else maybe show a warning.
+        }
+
+        require_once($CFG->dirroot . "/mod/data/lib.php");
+        $recordid = data_add_entry($data, $datarecordobj, $course, $cm, $context);
+
+        return $recordid;
+    }
+
+    /**
+     * Describes the create_database_entry return value.
+     *
+     * @return external_multiple_structure
+     */
+    public static function create_database_entry_returns() {
+        return new external_value(PARAM_INT, 'Entry id');
+    }
 }

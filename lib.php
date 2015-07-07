@@ -3951,3 +3951,65 @@ function data_notify_entry_created($recordid, $data, $course, $context, $cm) {
         }
     }
 }
+
+/**
+ * Creates a new entry in the database.
+ *
+ * @param object $data The data object for this activity.
+ * @param object $datarecord Record content to add. stdClass object with properties named 'field_<fieldid>'.
+ * @param object $course
+ * @param object $cm
+ * @param object $context The context in which the operation is performed (for capability checks).
+ * @return mixed The record id of the successfully created entry or
+ *               a $processdata object from data_process_submission() call otherwise.
+ */
+function data_add_entry($data, $datarecord, $course, $cm, $context) {
+    global $DB;
+
+    // Retrieve the format for the fields.
+    $fields = $DB->get_records('data_fields', array('dataid' => $data->id));
+
+    // Validate the form to ensure that enough data was submitted.
+    $processeddata = data_process_submission($data, $fields, $datarecord);
+
+    // Add instance to data_record.
+    // if ($processeddata->validated && $recordid = data_add_record($data, $currentgroup)) {
+    if ($processeddata->validated && $recordid = data_add_record($data)) {
+
+        // Insert a whole lot of empty records to make sure we have them.
+        $records = array();
+        foreach ($fields as $field) {
+            $content = new stdClass();
+            $content->recordid = $recordid;
+            $content->fieldid = $field->id;
+            $records[] = $content;
+        }
+
+        // Bulk insert the records now. Some records may have no data but all must exist.
+        $DB->insert_records('data_content', $records);
+
+        // Add all provided content.
+        foreach ($processeddata->fields as $fieldname => $field) {
+            $field->update_content($recordid, $datarecord->$fieldname, $fieldname);
+        }
+
+        // Trigger an event for creating this record.
+        $event = \mod_data\event\record_created::create(array(
+            'objectid' => 0,
+            'context' => $context,
+            'courseid' => $course->id,
+            'other' => array(
+                'dataid' => $data->id
+            )
+        ));
+        $event->add_record_snapshot('data', $data);
+        $event->trigger();
+
+        // Send a notification for creating this record
+        data_notify_entry_created($recordid, $data, $course, $context, $cm);
+
+        return $recordid;
+    }
+
+    return $processeddata;
+}

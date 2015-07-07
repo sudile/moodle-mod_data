@@ -33,5 +33,21 @@ $functions = array(
             no courses are provided then all the database instances the user has access to will be returned.',
         'type' => 'read',
         'capabilities' => 'mod/data:viewentry'
+    ),
+
+    'mod_data_get_database_fields' => array(
+        'classname' => 'mod_data_external',
+        'methodname' => 'get_database_fields',
+        'description' => 'Returns the list of fields the requested databae has.',
+        'type' => 'read',
+        'capabilities' => 'mod/data:viewentry'
+    ),
+
+    'mod_data_create_database_entry' => array(
+        'classname' => 'mod_data_external',
+        'methodname' => 'create_database_entry',
+        'description' => 'Creates a database entry.',
+        'type' => 'write',
+        'capabilities' => 'mod/data:writeentry'
     )
 );
